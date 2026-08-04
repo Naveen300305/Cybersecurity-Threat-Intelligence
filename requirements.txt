@@ -1,0 +1,18 @@
+# Graph
+neo4j>=5.20,<6.0
+langchain-neo4j>=0.1
+langchain>=0.3
+langchain-anthropic>=0.2
+
+# Data ingestion
+mitreattack-python>=3.0
+requests>=2.31
+python-dotenv>=1.0
+
+# API
+fastapi>=0.111
+uvicorn[standard]>=0.29
+pydantic>=2.0
+
+# Testing
+pytest>=8.0
