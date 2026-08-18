@@ -21,15 +21,22 @@ Node labels and key properties:
   (:Mitigation {id, name, description})
   (:CVE {id, description, cvss_v3_score, severity, published_date, is_kev, epss_score})
   (:AffectedProduct {cpe, vendor, product, version})
+  (:MonitoredAsset {id, name, vendor, product, version_range, owner, version_min, version_max, created_at})
+  (:AssetAlert {alert_id, asset_id, cve_id, cvss_v3_score, severity, is_kev, epss_score,
+                threat_priority_score, alert_tier, first_seen, notified_at,
+                exploiting_malware, deploying_actors, targeted_sectors, narrative})
 
 Relationships:
   (:ThreatActor)-[:USES]->(:Technique)
   (:ThreatActor)-[:DEPLOYS]->(:Malware)
   (:Malware)-[:USES]->(:Technique)
+  (:Malware)-[:EXPLOITS]->(:CVE)
   (:Technique)-[:BELONGS_TO]->(:Tactic)
   (:Technique)-[:HAS_SUBTECHNIQUE]->(:Technique)
   (:Technique)-[:MITIGATED_BY]->(:Mitigation)
   (:CVE)-[:AFFECTS]->(:AffectedProduct)
+  (:MonitoredAsset)-[:MATCHES]->(:AffectedProduct)
+  (:MonitoredAsset)-[:HAS_ALERT]->(:AssetAlert)
 """
 
 

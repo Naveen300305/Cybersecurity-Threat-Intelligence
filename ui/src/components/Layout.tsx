@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
-import { Network, ShieldAlert, Terminal, Radio } from 'lucide-react'
+import { Network, ShieldAlert, Terminal, Radio, Monitor } from 'lucide-react'
 import { api } from '../api'
 
 const NAV_ITEMS = [
   { to: '/query', label: 'Query', icon: Terminal },
   { to: '/actors', label: 'Threat Actors', icon: Network },
   { to: '/cves', label: 'CVE Lookup', icon: ShieldAlert },
+  { to: '/assets', label: 'My Assets', icon: Monitor },
 ]
 
 function HealthIndicator() {

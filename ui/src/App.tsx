@@ -4,6 +4,7 @@ import QueryPage from './pages/QueryPage'
 import ActorsPage from './pages/ActorsPage'
 import ActorDetailPage from './pages/ActorDetailPage'
 import CvesPage from './pages/CvesPage'
+import AssetsPage from './pages/AssetsPage'
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/actors" element={<ActorsPage />} />
         <Route path="/actors/:name" element={<ActorDetailPage />} />
         <Route path="/cves" element={<CvesPage />} />
+        <Route path="/assets" element={<AssetsPage />} />
       </Routes>
     </Layout>
   )

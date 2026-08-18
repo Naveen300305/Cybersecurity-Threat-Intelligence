@@ -8,7 +8,7 @@ single Cypher query using ONLY the schema below - never invent labels,
 relationship types, or properties that aren't listed.
 
 Schema:
-{SCHEMA_TEXT}
+{SCHEMA_TEXT.replace("{", "{{").replace("}", "}}")}
 
 Rules:
 - Return only the Cypher query, no explanation, no markdown fences.

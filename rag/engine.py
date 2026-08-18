@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 
-from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_neo4j import GraphCypherQAChain, Neo4jGraph
 
 from rag.prompts import CYPHER_GENERATION_PROMPT, QA_PROMPT
@@ -25,8 +25,8 @@ def build_graph() -> Neo4jGraph:
 
 def build_chain(graph: Neo4jGraph | None = None) -> GraphCypherQAChain:
     graph = graph or build_graph()
-    llm = ChatAnthropic(
-        model=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5"), temperature=0
+    llm = ChatGoogleGenerativeAI(
+        model=os.environ.get("GEMINI_MODEL", "gemini-2.0-flash"), temperature=0
     )
     return GraphCypherQAChain.from_llm(
         llm=llm,

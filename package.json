@@ -1,0 +1,11 @@
+{
+  "name": "cybergraph-intelligence-platform",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix ui",
+    "build": "npm run build --prefix ui",
+    "preview": "npm run preview --prefix ui",
+    "install:ui": "npm install --prefix ui"
+  }
+}
