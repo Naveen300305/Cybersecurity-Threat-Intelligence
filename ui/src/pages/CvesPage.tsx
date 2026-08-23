@@ -7,18 +7,33 @@ export default function CvesPage() {
   const [input, setInput] = useState('')
   const [cve, setCve] = useState<CVESummary | null>(null)
   const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(false) // true when pulling live from NVD
   const [error, setError] = useState<string | null>(null)
 
   async function submit() {
-    const id = input.trim()
+    const id = input.trim().toUpperCase()
     if (!id || loading) return
     setLoading(true)
+    setFetching(false)
     setError(null)
     setCve(null)
     try {
+      // 1. Try the local graph first (fast)
       setCve(await api.getCve(id))
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Request failed')
+      if (err instanceof ApiError && err.status === 404) {
+        // 2. Not in graph — pull from NVD on demand and store it
+        try {
+          setFetching(true)
+          setCve(await api.ingestCve(id))
+        } catch (ingestErr) {
+          setError(ingestErr instanceof ApiError ? ingestErr.message : 'Request failed')
+        } finally {
+          setFetching(false)
+        }
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Request failed')
+      }
     } finally {
       setLoading(false)
     }
@@ -58,9 +73,16 @@ export default function CvesPage() {
           className="flex items-center gap-2 rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-black disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition"
         >
           {loading && <Loader2 size={15} className="animate-spin" />}
-          {loading ? 'Looking up...' : 'Lookup'}
+          {loading ? (fetching ? 'Fetching from NVD...' : 'Looking up...') : 'Lookup'}
         </button>
       </form>
+
+      {fetching && (
+        <div className="mt-6 flex items-center gap-2 text-sm text-gray-500">
+          <Loader2 size={14} className="animate-spin" />
+          Not in local graph — fetching live from NVD and storing...
+        </div>
+      )}
 
       {error && (
         <div className="mt-6 flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/5 p-4 text-sm text-danger">

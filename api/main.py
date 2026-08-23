@@ -20,6 +20,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from neo4j import GraphDatabase
 
 from api.schemas import ActorProfile, CVESummary, QueryRequest, QueryResponse
+from ingestion.connectors.nvd import fetch_cve_by_id
+from ingestion.loaders.neo4j_loader import load_cves
 
 # Module 11 imports
 from monitoring.enricher import generate_mitigation_checklist, generate_narrative
@@ -157,6 +159,57 @@ def get_cve(cve_id: str):
     if result is None:
         raise HTTPException(status_code=404, detail=f"CVE '{cve_id}' not found")
 
+    return CVESummary(**result)
+
+
+@app.post("/api/v1/cves/ingest", response_model=CVESummary)
+def ingest_cve_by_id(cve_id: str):
+    """Fetch a specific CVE from NVD by ID, store it in Neo4j, and return it.
+
+    Useful for demos/testing: load any CVE on demand regardless of publish date.
+    Example: POST /api/v1/cves/ingest?cve_id=CVE-2021-44228
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    # 1. Try the local graph first (avoid unnecessary NVD round-trip)
+    with _state["driver"].session() as session:
+        result = session.run(
+            "MATCH (c:CVE {id: $cve_id}) RETURN c.id AS id, c.description AS description, "
+            "c.cvss_v3_score AS cvss_v3_score, c.severity AS severity, "
+            "coalesce(c.is_kev, false) AS is_kev",
+            cve_id=cve_id,
+        ).single()
+    if result:
+        log.info("CVE %s already in graph, returning cached.", cve_id)
+        return CVESummary(**result)
+
+    # 2. Not in graph — fetch from NVD
+    try:
+        cve_data = fetch_cve_by_id(
+            cve_id,
+            api_key=os.environ.get("NVD_API_KEY") or None,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"NVD fetch failed: {exc}") from exc
+
+    if cve_data is None:
+        raise HTTPException(status_code=404, detail=f"CVE '{cve_id}' not found in NVD")
+
+    # 3. Store in Neo4j
+    load_cves(_state["driver"], [cve_data])
+    log.info("CVE %s fetched from NVD and stored in graph.", cve_id)
+
+    # 4. Return the now-persisted record
+    with _state["driver"].session() as session:
+        result = session.run(
+            "MATCH (c:CVE {id: $cve_id}) RETURN c.id AS id, c.description AS description, "
+            "c.cvss_v3_score AS cvss_v3_score, c.severity AS severity, "
+            "coalesce(c.is_kev, false) AS is_kev",
+            cve_id=cve_id,
+        ).single()
+    if result is None:
+        raise HTTPException(status_code=500, detail="CVE stored but could not be re-read")
     return CVESummary(**result)
 
 

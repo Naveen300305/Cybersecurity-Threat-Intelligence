@@ -109,6 +109,10 @@ export const api = {
 
   getCve: (id: string) => request<CVESummary>(`/cves/${encodeURIComponent(id)}`),
 
+  /** Fetch a CVE from NVD by ID, persist it in Neo4j, and return it. */
+  ingestCve: (id: string) =>
+    request<CVESummary>(`/cves/ingest?cve_id=${encodeURIComponent(id)}`, { method: 'POST' }),
+
   health: () => fetch('/health').then((r) => r.ok),
 
   // Module 11
